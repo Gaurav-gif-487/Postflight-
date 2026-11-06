@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/postflight/postflight/docs/proof-schema.json",
+  "title": "postflight-proof",
+  "type": "object",
+  "required": ["schemaVersion", "toolVersion", "timestamp", "changedFiles", "evidence", "limitations", "environment"],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "toolVersion": { "type": "string" },
+    "repository": { "type": ["string", "null"] },
+    "commit": { "type": ["string", "null"] },
+    "baseCommit": { "type": ["string", "null"] },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "changedFiles": { "type": "array", "items": { "type": "string" } },
+    "changedLines": {
+      "type": "object",
+      "properties": {
+        "insertions": { "type": "integer" },
+        "deletions": { "type": "integer" }
+      }
+    },
+    "tests": {
+      "type": ["object", "null"],
+      "properties": {
+        "command": { "type": "string" },
+        "passed": { "type": "boolean" },
+        "exitCode": { "type": ["integer", "null"] },
+        "durationMs": { "type": ["number", "null"] }
+      }
+    },
+    "coverage": {
+      "type": ["object", "null"],
+      "description": "Populated when a coverage report (--coverage or auto-discovered) was readable this run. { available: false, reason } when none was found or it couldn't be parsed.",
+      "properties": {
+        "available": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "format": { "type": "string" },
+        "file": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "changedLines": {
+          "type": "object",
+          "properties": {
+            "covered": { "type": "integer" },
+            "executable": { "type": "integer" },
+            "ratio": { "type": ["number", "null"] }
+          }
+        },
+        "files": { "type": "object" }
+      }
+    },
+    "analyzers": { "type": "array", "items": { "type": "string" } },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "status", "strength", "origin", "summary", "provenance"],
+        "properties": {
+          "id": { "type": "string" },
+          "category": { "type": "string" },
+          "status": { "enum": ["PASS", "FAIL", "WARN", "UNKNOWN"] },
+          "strength": { "enum": ["WEAK", "MEDIUM", "STRONG"] },
+          "origin": { "enum": ["INTRODUCED", "PRE_EXISTING", "UNKNOWN"] },
+          "summary": { "type": "string" },
+          "detail": { "type": ["string", "null"] },
+          "provenance": {
+            "type": "object",
+            "required": ["method"],
+            "properties": {
+              "method": { "enum": ["observed", "derived", "heuristic", "declared"] },
+              "source": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "findings": { "type": "array" },
+    "task": { "type": ["object", "null"] },
+    "policies": {
+      "type": ["object", "null"],
+      "properties": { "name": { "type": "string" } }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "summary"],
+        "properties": {
+          "id": { "type": "string" },
+          "summary": { "type": "string" },
+          "impact": { "type": "string" }
+        }
+      }
+    },
+    "performance": {
+      "type": ["object", "null"],
+      "description": "Phase timings for this run and coverage-report cache hit/miss counts. Absent phases simply weren't timed (e.g. no --build means no 'build' phase); never fabricated.",
+      "properties": {
+        "totalMs": { "type": "integer" },
+        "phases": { "type": "object", "description": "Milliseconds per phase, keyed by phase name (diff, patternScan, analyzers, untested, build, test, policy, coverage)" },
+        "coverageCache": {
+          "type": "object",
+          "properties": {
+            "hits": { "type": "integer" },
+            "misses": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "verdict": {
+      "type": ["object", "null"],
+      "properties": {
+        "value": { "enum": ["SAFE_TO_MERGE", "REVIEW_REQUIRED", "BLOCK", "INCONCLUSIVE"] },
+        "exitCode": { "type": "integer" },
+        "reasons": { "type": "array" },
+        "evidenceScore": { "type": "object" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": ["node", "platform", "ci"],
+      "properties": {
+        "node": { "type": "string" },
+        "platform": { "type": "string" },
+        "ci": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -1,0 +1,92 @@
+name: "postflight"
+description: "The CI layer for AI coding agents. Fails the check if the diff isn't safe to merge."
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  base:
+    description: "Git ref to diff against"
+    required: false
+    default: "origin/${{ github.event.repository.default_branch }}"
+  build:
+    description: "Build command to run as part of the check"
+    required: false
+    default: ""
+  test:
+    description: "Test command to run as part of the check"
+    required: false
+    default: ""
+  format:
+    description: "Output format: text | json | sarif | github"
+    required: false
+    default: "github"
+  policy:
+    description: >
+      Opt into the evidence/verdict engine instead of the default confidence
+      score (presets: default | strict | advisory). Adds a BLOCK/
+      REVIEW_REQUIRED/INCONCLUSIVE/SAFE_TO_MERGE verdict and switches exit
+      codes to 0/1/3/4. Leave empty to keep the original 0/1 confidence-score
+      behavior.
+    required: false
+    default: ""
+  diff-behavior:
+    description: >
+      Run the test command once against `base` and once against the change,
+      and flag individual tests that newly fail (requires `test` to be set).
+      Set to "true" to enable.
+    required: false
+    default: ""
+  coverage:
+    description: "Explicit coverage report path, if it isn't at a conventional location"
+    required: false
+    default: ""
+  no-analyzers:
+    description: "Set to \"true\" to skip architecture-drift analysis (faster)"
+    required: false
+    default: ""
+  timeout:
+    description: "Kill build/test commands after this many seconds (default: 600, 0 disables)"
+    required: false
+    default: ""
+  proof:
+    description: "Set to \"true\" to write postflight-proof.json (implies the evidence/verdict engine)"
+    required: false
+    default: ""
+  proof-out:
+    description: "Path to write the proof artifact to (implies proof: true)"
+    required: false
+    default: ""
+  task:
+    description: "Free-text description of what the change was meant to do, recorded in the proof artifact"
+    required: false
+    default: ""
+  task-file:
+    description: "Path to a JSON file: { \"task\": \"...\", \"requirements\": [\"...\"] }"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Fetch base ref
+      shell: bash
+      run: git fetch --no-tags --depth=1 origin "${{ inputs.base }}" || true
+
+    - name: Run postflight
+      shell: bash
+      run: |
+        node "${GITHUB_ACTION_PATH}/bin/postflight.js" run \
+          --base "${{ inputs.base }}" \
+          ${{ inputs.build && format('--build "{0}"', inputs.build) || '' }} \
+          ${{ inputs.test && format('--test "{0}"', inputs.test) || '' }} \
+          ${{ inputs.policy && format('--policy "{0}"', inputs.policy) || '' }} \
+          ${{ inputs['diff-behavior'] == 'true' && '--diff-behavior' || '' }} \
+          ${{ inputs.coverage && format('--coverage "{0}"', inputs.coverage) || '' }} \
+          ${{ inputs['no-analyzers'] == 'true' && '--no-analyzers' || '' }} \
+          ${{ inputs.timeout && format('--timeout "{0}"', inputs.timeout) || '' }} \
+          ${{ inputs.proof == 'true' && '--proof' || '' }} \
+          ${{ inputs['proof-out'] && format('--proof-out "{0}"', inputs['proof-out']) || '' }} \
+          ${{ inputs.task && format('--task "{0}"', inputs.task) || '' }} \
+          ${{ inputs['task-file'] && format('--task-file "{0}"', inputs['task-file']) || '' }} \
+          --format "${{ inputs.format }}"

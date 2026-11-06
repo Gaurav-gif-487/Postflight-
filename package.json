@@ -1,0 +1,45 @@
+{
+  "name": "postflight",
+  "version": "1.3.0",
+  "description": "The deterministic verification layer between AI-generated code and merge. Runs after Claude Code, Codex, or any agent finishes, and proves whether the change is actually safe to merge.",
+  "bin": {
+    "postflight": "./bin/postflight.js"
+  },
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "benchmark": "node benchmarks/runner/run-benchmarks.js",
+    "benchmark:report": "node benchmarks/runner/run-benchmarks.js --report",
+    "benchmark:real": "node benchmarks/runner/run-real-repos.js",
+    "benchmark:real:report": "node benchmarks/runner/run-real-repos.js --report",
+    "replay:fastscan": "node tools/replay/fastscan.js",
+    "replay:testmapping": "node tools/replay/testmapping-replay.js"
+  },
+  "keywords": [
+    "ai-agents",
+    "claude-code",
+    "codex",
+    "coding-agent",
+    "reliability",
+    "ci",
+    "code-review",
+    "verification",
+    "proof-of-change",
+    "evidence"
+  ],
+  "license": "MIT",
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "plugins",
+    "action.yml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {}
+}
